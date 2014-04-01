@@ -46,6 +46,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.tavianator</groupId>
+                <artifactId>sangria-contextual</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>4.0-beta4</version>
@@ -185,5 +191,6 @@
 
     <modules>
         <module>sangria-core</module>
+        <module>sangria-contextual</module>
     </modules>
 </project>
