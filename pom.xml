@@ -11,7 +11,16 @@
 
     <name>Sangria</name>
     <description>A collection of Guice extensions</description>
+    <url>http://tavianator.com/sangria/</url>
     <inceptionYear>2014</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>WTFPL Version 2</name>
+            <url>http://www.wtfpl.net/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <developers>
         <developer>
@@ -26,7 +35,7 @@
 
     <scm>
         <connection>scm:git:git://tavianator.com/sangria.git</connection>
-        <url>http://tavianator.com/sangria</url>
+        <url>http://tavianator.com/cgit/sangria.git/</url>
     </scm>
 
     <prerequisites>
