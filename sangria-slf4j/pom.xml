@@ -13,7 +13,7 @@
     <artifactId>sangria-slf4j</artifactId>
     <packaging>jar</packaging>
     <name>Sangria SLF4J</name>
-    <description>SLF4J injection</description>
+    <description>SLF4J Logger injection</description>
 
     <dependencies>
         <dependency>
