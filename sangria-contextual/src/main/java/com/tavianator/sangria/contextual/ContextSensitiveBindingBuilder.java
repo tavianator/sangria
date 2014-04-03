@@ -31,20 +31,20 @@ public interface ContextSensitiveBindingBuilder<T> {
     /**
      * See the EDSL examples {@link ContextSensitiveBinder here}.
      */
-    void toContextSensitiveProvider(Class<? extends ContextSensitiveProvider<T>> type);
+    void toContextSensitiveProvider(Class<? extends ContextSensitiveProvider<? extends T>> type);
 
     /**
      * See the EDSL examples {@link ContextSensitiveBinder here}.
      */
-    void toContextSensitiveProvider(TypeLiteral<? extends ContextSensitiveProvider<T>> type);
+    void toContextSensitiveProvider(TypeLiteral<? extends ContextSensitiveProvider<? extends T>> type);
 
     /**
      * See the EDSL examples {@link ContextSensitiveBinder here}.
      */
-    void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<T>> type);
+    void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<? extends T>> key);
 
     /**
      * See the EDSL examples {@link ContextSensitiveBinder here}.
      */
-    void toContextSensitiveProvider(ContextSensitiveProvider<T> provider);
+    void toContextSensitiveProvider(ContextSensitiveProvider<? extends T> provider);
 }

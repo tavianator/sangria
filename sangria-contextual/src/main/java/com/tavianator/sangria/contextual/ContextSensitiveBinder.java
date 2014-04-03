@@ -103,50 +103,50 @@ public class ContextSensitiveBinder {
      * Fluent binding builder implementation.
      */
     private class BindingBuilder<T> implements AnnotatedContextSensitiveBindingBuilder<T> {
-        private final Key<T> key;
+        private final Key<T> bindingKey;
         private final DelayedError error;
 
-        BindingBuilder(Key<T> key) {
-            this.key = key;
-            this.error = DelayedError.create(binder, "Missing call to toContextSensitiveProvider() for %s", key);
+        BindingBuilder(Key<T> bindingKey) {
+            this.bindingKey = bindingKey;
+            this.error = DelayedError.create(binder, "Missing call to toContextSensitiveProvider() for %s", bindingKey);
         }
 
         @Override
         public ContextSensitiveBindingBuilder<T> annotatedWith(Class<? extends Annotation> annotationType) {
             error.cancel();
-            return new BindingBuilder<>(Key.get(key.getTypeLiteral(), annotationType));
+            return new BindingBuilder<>(Key.get(bindingKey.getTypeLiteral(), annotationType));
         }
 
         @Override
         public ContextSensitiveBindingBuilder<T> annotatedWith(Annotation annotation) {
             error.cancel();
-            return new BindingBuilder<>(Key.get(key.getTypeLiteral(), annotation));
+            return new BindingBuilder<>(Key.get(bindingKey.getTypeLiteral(), annotation));
         }
 
         @Override
-        public void toContextSensitiveProvider(Class<? extends ContextSensitiveProvider<T>> type) {
+        public void toContextSensitiveProvider(Class<? extends ContextSensitiveProvider<? extends T>> type) {
             toContextSensitiveProvider(Key.get(type));
         }
 
         @Override
-        public void toContextSensitiveProvider(TypeLiteral<? extends ContextSensitiveProvider<T>> type) {
+        public void toContextSensitiveProvider(TypeLiteral<? extends ContextSensitiveProvider<? extends T>> type) {
             toContextSensitiveProvider(Key.get(type));
         }
 
         @Override
-        public void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<T>> type) {
+        public void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<? extends T>> key) {
             error.cancel();
 
-            binder.bind(key).toProvider(new ProviderAdapter<>(type));
-            binder.bindListener(new BindingMatcher(key), new Trigger(key));
+            binder.bind(bindingKey).toProvider(new ProviderAdapter<>(key));
+            binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
         }
 
         @Override
-        public void toContextSensitiveProvider(ContextSensitiveProvider<T> provider) {
+        public void toContextSensitiveProvider(ContextSensitiveProvider<? extends T> provider) {
             error.cancel();
 
-            binder.bind(key).toProvider(new ProviderAdapter<>(provider));
-            binder.bindListener(new BindingMatcher(key), new Trigger(key));
+            binder.bind(bindingKey).toProvider(new ProviderAdapter<>(provider));
+            binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
             // Match the behaviour of LinkedBindingBuilder#toProvider(Provider)
             binder.requestInjection(provider);
         }
@@ -159,10 +159,10 @@ public class ContextSensitiveBinder {
         private static final ThreadLocal<InjectionPoint> CURRENT_CONTEXT = new ThreadLocal<>();
 
         private final Object equalityKey;
-        private final @Nullable Key<? extends ContextSensitiveProvider<T>> providerKey;
-        private Provider<? extends ContextSensitiveProvider<T>> provider;
+        private final @Nullable Key<? extends ContextSensitiveProvider<? extends T>> providerKey;
+        private Provider<? extends ContextSensitiveProvider<? extends T>> provider;
 
-        ProviderAdapter(Key<? extends ContextSensitiveProvider<T>> providerKey) {
+        ProviderAdapter(Key<? extends ContextSensitiveProvider<? extends T>> providerKey) {
             this.equalityKey = providerKey;
             this.providerKey = providerKey;
         }
@@ -190,7 +190,7 @@ public class ContextSensitiveBinder {
 
         @Override
         public T get() {
-            ContextSensitiveProvider<T> delegate = provider.get();
+            ContextSensitiveProvider<? extends T> delegate = provider.get();
             InjectionPoint ip = CURRENT_CONTEXT.get();
             if (ip != null) {
                 return delegate.getInContext(ip);
