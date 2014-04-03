@@ -17,10 +17,12 @@
 
 package com.tavianator.sangria.contextual;
 
+import java.util.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -30,6 +32,9 @@ import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.google.inject.spi.DefaultBindingTargetVisitor;
+import com.google.inject.spi.Element;
+import com.google.inject.spi.Elements;
 import com.google.inject.spi.InjectionPoint;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +54,10 @@ public class ContextSensitiveBinderTest {
     public @Rule ExpectedException thrown = ExpectedException.none();
 
     private static class SelfProvider implements ContextSensitiveProvider<String> {
+        // For testing getInjectionPoints() in the SPI below
+        @SuppressWarnings("unused")
+        @Inject Injector injector;
+
         @Override
         public String getInContext(InjectionPoint injectionPoint) {
             return injectionPoint.getDeclaringType().getRawType().getSimpleName();
@@ -138,7 +147,7 @@ public class ContextSensitiveBinderTest {
     }
 
     @Test
-    public void testDeDuplication() {
+    public void testKeyDeDuplication() {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
@@ -153,6 +162,30 @@ public class ContextSensitiveBinderTest {
                         .toContextSensitiveProvider(SelfProvider.class);
             }
         });
+
+        HasSelf hasSelf = injector.getInstance(HasSelf.class);
+        assertThat(hasSelf.self, equalTo("HasSelf"));
+        assertThat(hasSelf.selfProvider.get(), equalTo("<unknown>"));
+    }
+
+    @Test
+    public void testInstanceDeDuplication() {
+        final SelfProvider selfProvider = new SelfProvider();
+        Injector injector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                ContextSensitiveBinder contextualBinder = ContextSensitiveBinder.create(binder());
+                contextualBinder
+                        .bind(String.class)
+                        .annotatedWith(Names.named("self"))
+                        .toContextSensitiveProvider(selfProvider);
+                contextualBinder
+                        .bind(String.class)
+                        .annotatedWith(Names.named("self"))
+                        .toContextSensitiveProvider(selfProvider);
+            }
+        });
+
         HasSelf hasSelf = injector.getInstance(HasSelf.class);
         assertThat(hasSelf.self, equalTo("HasSelf"));
         assertThat(hasSelf.selfProvider.get(), equalTo("<unknown>"));
@@ -271,5 +304,62 @@ public class ContextSensitiveBinderTest {
                         .annotatedWith(Names.named("self"));
             }
         });
+    }
+
+    private static class TestVisitor<T> extends DefaultBindingTargetVisitor<T, Boolean> implements ContextSensitiveBindingVisitor<T, Boolean> {
+        @Override
+        public Boolean visit(ContextSensitiveProviderKeyBinding<? extends T> binding) {
+            assertThat(binding.getContextSensitiveProviderKey().equals(new Key<SelfProvider>() { }), is(true));
+            return true;
+        }
+
+        @Override
+        public Boolean visit(ContextSensitiveProviderInstanceBinding<? extends T> binding) {
+            assertThat(binding.getContextSensitiveProviderInstance(), instanceOf(SelfProvider.class));
+            assertThat(binding.getInjectionPoints(), hasSize(1));
+            return true;
+        }
+
+        @Override
+        protected Boolean visitOther(Binding<? extends T> binding) {
+            return false;
+        }
+    }
+
+    private <T> boolean visit(Binding<T> binding) {
+        return binding.acceptTargetVisitor(new TestVisitor<T>());
+    }
+
+    @Test
+    public void testExtensionSpi() {
+        List<Element> elements = Elements.getElements(new AbstractModule() {
+            @Override
+            protected void configure() {
+                ContextSensitiveBinder contextualBinder = ContextSensitiveBinder.create(binder());
+                contextualBinder
+                        .bind(String.class)
+                        .annotatedWith(Names.named("key"))
+                        .toContextSensitiveProvider(SelfProvider.class);
+                contextualBinder
+                        .bind(String.class)
+                        .annotatedWith(Names.named("instance"))
+                        .toContextSensitiveProvider(new SelfProvider());
+            }
+        });
+
+        int passed = 0;
+        for (Element element : elements) {
+            if (element instanceof Binding) {
+                if (visit(((Binding<?>)element))) {
+                    ++passed;
+                }
+            }
+        }
+        assertThat(passed, equalTo(2));
+
+        Injector injector = Guice.createInjector(Elements.getModule(elements));
+        assertThat(visit(injector.getBinding(new Key<String>(Names.named("key")) { })), is(true));
+        assertThat(visit(injector.getBinding(new Key<String>(Names.named("instance")) { })), is(true));
+        assertThat(visit(injector.getBinding(SelfProvider.class)), is(false));
     }
 }

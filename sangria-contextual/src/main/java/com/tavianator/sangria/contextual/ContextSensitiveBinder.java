@@ -18,24 +18,27 @@
 package com.tavianator.sangria.contextual;
 
 import java.lang.annotation.Annotation;
-import javax.annotation.Nullable;
+import java.util.*;
 import javax.inject.Inject;
 
 import com.google.common.base.Objects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
+import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
+import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.DependencyAndSource;
 import com.google.inject.spi.InjectionPoint;
+import com.google.inject.spi.ProviderInstanceBinding;
+import com.google.inject.spi.ProviderWithExtensionVisitor;
 import com.google.inject.spi.ProvisionListener;
-import com.google.inject.util.Providers;
 
 import com.tavianator.sangria.core.DelayedError;
 
@@ -137,7 +140,7 @@ public class ContextSensitiveBinder {
         public void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<? extends T>> key) {
             error.cancel();
 
-            binder.bind(bindingKey).toProvider(new ProviderAdapter<>(key));
+            binder.bind(bindingKey).toProvider(new ProviderKeyAdapter<>(key));
             binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
         }
 
@@ -145,7 +148,7 @@ public class ContextSensitiveBinder {
         public void toContextSensitiveProvider(ContextSensitiveProvider<? extends T> provider) {
             error.cancel();
 
-            binder.bind(bindingKey).toProvider(new ProviderAdapter<>(provider));
+            binder.bind(bindingKey).toProvider(new ProviderInstanceAdapter<>(provider));
             binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
             // Match the behaviour of LinkedBindingBuilder#toProvider(Provider)
             binder.requestInjection(provider);
@@ -155,30 +158,8 @@ public class ContextSensitiveBinder {
     /**
      * Adapter from {@link ContextSensitiveProvider} to {@link Provider}.
      */
-    private static class ProviderAdapter<T> implements Provider<T> {
+    private static abstract class ProviderAdapter<T> implements ProviderWithExtensionVisitor<T> {
         private static final ThreadLocal<InjectionPoint> CURRENT_CONTEXT = new ThreadLocal<>();
-
-        private final Object equalityKey;
-        private final @Nullable Key<? extends ContextSensitiveProvider<? extends T>> providerKey;
-        private Provider<? extends ContextSensitiveProvider<? extends T>> provider;
-
-        ProviderAdapter(Key<? extends ContextSensitiveProvider<? extends T>> providerKey) {
-            this.equalityKey = providerKey;
-            this.providerKey = providerKey;
-        }
-
-        ProviderAdapter(ContextSensitiveProvider<T> provider) {
-            this.equalityKey = provider;
-            this.providerKey = null;
-            this.provider = Providers.of(provider);
-        }
-
-        @Inject
-        void inject(Injector injector) {
-            if (provider == null) {
-                provider = injector.getProvider(providerKey);
-            }
-        }
 
         static void pushContext(InjectionPoint ip) {
             CURRENT_CONTEXT.set(ip);
@@ -190,31 +171,130 @@ public class ContextSensitiveBinder {
 
         @Override
         public T get() {
-            ContextSensitiveProvider<? extends T> delegate = provider.get();
             InjectionPoint ip = CURRENT_CONTEXT.get();
             if (ip != null) {
-                return delegate.getInContext(ip);
+                return delegate().getInContext(ip);
             } else {
-                return delegate.getInUnknownContext();
+                return delegate().getInUnknownContext();
             }
         }
 
-        // Have to implement equals()/hashCode() here to support binding de-duplication
+        abstract ContextSensitiveProvider<? extends T> delegate();
+
+        // Have to implement equals()/hashCode() to support binding de-duplication
+        @Override
+        public abstract boolean equals(Object obj);
+
+        @Override
+        public abstract int hashCode();
+    }
+
+    private static class ProviderKeyAdapter<T> extends ProviderAdapter<T> implements ContextSensitiveProviderKeyBinding<T> {
+        private final Key<? extends ContextSensitiveProvider<? extends T>> providerKey;
+        private Provider<? extends ContextSensitiveProvider<? extends T>> provider;
+
+        ProviderKeyAdapter(Key<? extends ContextSensitiveProvider<? extends T>> providerKey) {
+            this.providerKey = providerKey;
+        }
+
+        @Inject
+        void inject(Injector injector) {
+            provider = injector.getProvider(providerKey);
+        }
+
+        @Override
+        ContextSensitiveProvider<? extends T> delegate() {
+            return provider.get();
+        }
+
+        @Override
+        public <B, V> V acceptExtensionVisitor(BindingTargetVisitor<B, V> visitor, ProviderInstanceBinding<? extends B> binding) {
+            if (visitor instanceof ContextSensitiveBindingVisitor) {
+                return ((ContextSensitiveBindingVisitor<T, V>)visitor).visit(this);
+            } else {
+                return visitor.visit(binding);
+            }
+        }
+
+        @Override
+        public Key<? extends ContextSensitiveProvider<? extends T>> getContextSensitiveProviderKey() {
+            return providerKey;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (obj == this) {
                 return true;
-            } else if (!(obj instanceof ProviderAdapter)) {
+            } else if (!(obj instanceof ProviderKeyAdapter)) {
                 return false;
             }
 
-            ProviderAdapter<?> other = (ProviderAdapter<?>)obj;
-            return equalityKey.equals(other.equalityKey);
+            ProviderKeyAdapter<?> other = (ProviderKeyAdapter<?>)obj;
+            return providerKey.equals(other.providerKey);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(equalityKey);
+            return Objects.hashCode(providerKey);
+        }
+    }
+
+    private static class ProviderInstanceAdapter<T> extends ProviderAdapter<T> implements ContextSensitiveProviderInstanceBinding<T> {
+        private final ContextSensitiveProvider<? extends T> instance;
+        private Set<InjectionPoint> injectionPoints;
+
+        ProviderInstanceAdapter(ContextSensitiveProvider<? extends T> instance) {
+            this.instance = instance;
+
+            Set<InjectionPoint> injectionPoints;
+            try {
+                injectionPoints = InjectionPoint.forInstanceMethodsAndFields(instance.getClass());
+            } catch (ConfigurationException e) {
+                // We can ignore the error, the earlier requestInjection(instance) call will have reported it
+                injectionPoints = e.getPartialValue();
+            }
+            this.injectionPoints = injectionPoints;
+        }
+
+        @Override
+        ContextSensitiveProvider<? extends T> delegate() {
+            return instance;
+        }
+
+        @Override
+        public <B, V> V acceptExtensionVisitor(BindingTargetVisitor<B, V> visitor, ProviderInstanceBinding<? extends B> binding) {
+            if (visitor instanceof ContextSensitiveBindingVisitor) {
+                return ((ContextSensitiveBindingVisitor<T, V>)visitor).visit(this);
+            } else {
+                return visitor.visit(binding);
+            }
+        }
+
+        @Override
+        public ContextSensitiveProvider<? extends T> getContextSensitiveProviderInstance() {
+            return instance;
+        }
+
+        @Override
+        public Set<InjectionPoint> getInjectionPoints() {
+            return injectionPoints;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            } else if (!(obj instanceof ProviderInstanceAdapter)) {
+                return false;
+            }
+
+            ProviderInstanceAdapter<?> other = (ProviderInstanceAdapter<?>)obj;
+            return instance.equals(other.instance);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(instance);
         }
     }
 
