@@ -207,6 +207,7 @@ public class ContextSensitiveBinder {
             return provider.get();
         }
 
+        @SuppressWarnings("unchecked") // The real type of B must be T
         @Override
         public <B, V> V acceptExtensionVisitor(BindingTargetVisitor<B, V> visitor, ProviderInstanceBinding<? extends B> binding) {
             if (visitor instanceof ContextSensitiveBindingVisitor) {
@@ -261,6 +262,7 @@ public class ContextSensitiveBinder {
             return instance;
         }
 
+        @SuppressWarnings("unchecked") // The real type of B must be T
         @Override
         public <B, V> V acceptExtensionVisitor(BindingTargetVisitor<B, V> visitor, ProviderInstanceBinding<? extends B> binding) {
             if (visitor instanceof ContextSensitiveBindingVisitor) {
