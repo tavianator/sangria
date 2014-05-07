@@ -126,23 +126,22 @@ public class Priority implements Comparable<Priority> {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("Priority.");
+        StringBuilder builder = new StringBuilder();
         if (weights.length == 0) {
-            builder.append("getDefault()");
+            builder.append("default priority");
         } else {
-            builder.append("create(");
+            builder.append("priority [");
             for (int i = 0; i < weights.length; ++i) {
                 if (i != 0) {
                     builder.append(", ");
                 }
                 builder.append(weights[i]);
             }
-            builder.append(")");
+            builder.append("]");
         }
         if (seq != 0) {
-            builder.append(".next(")
-                    .append(seq)
-                    .append(")");
+            builder.append(" + ")
+                    .append(seq);
         }
         return builder.toString();
     }

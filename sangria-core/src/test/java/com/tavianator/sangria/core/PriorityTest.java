@@ -85,16 +85,16 @@ public class PriorityTest {
 
     @Test
     public void testToString() {
-        assertThat(Priority.getDefault().toString(), equalTo("Priority.getDefault()"));
-        assertThat(Priority.getDefault().next().toString(), equalTo("Priority.getDefault().next(1)"));
-        assertThat(Priority.getDefault().next().next().toString(), equalTo("Priority.getDefault().next(2)"));
+        assertThat(Priority.getDefault().toString(), equalTo("default priority"));
+        assertThat(Priority.getDefault().next().toString(), equalTo("default priority + 1"));
+        assertThat(Priority.getDefault().next().next().toString(), equalTo("default priority + 2"));
 
-        assertThat(Priority.create(1).toString(), equalTo("Priority.create(1)"));
-        assertThat(Priority.create(1).next().toString(), equalTo("Priority.create(1).next(1)"));
-        assertThat(Priority.create(1).next().next().toString(), equalTo("Priority.create(1).next(2)"));
+        assertThat(Priority.create(1).toString(), equalTo("priority [1]"));
+        assertThat(Priority.create(1).next().toString(), equalTo("priority [1] + 1"));
+        assertThat(Priority.create(1).next().next().toString(), equalTo("priority [1] + 2"));
 
-        assertThat(Priority.create(1, 2).toString(), equalTo("Priority.create(1, 2)"));
-        assertThat(Priority.create(1, 2).next().toString(), equalTo("Priority.create(1, 2).next(1)"));
-        assertThat(Priority.create(1, 2).next().next().toString(), equalTo("Priority.create(1, 2).next(2)"));
+        assertThat(Priority.create(1, 2).toString(), equalTo("priority [1, 2]"));
+        assertThat(Priority.create(1, 2).next().toString(), equalTo("priority [1, 2] + 1"));
+        assertThat(Priority.create(1, 2).next().next().toString(), equalTo("priority [1, 2] + 2"));
     }
 }
