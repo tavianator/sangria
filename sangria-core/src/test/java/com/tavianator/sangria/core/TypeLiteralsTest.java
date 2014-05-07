@@ -19,7 +19,8 @@ package com.tavianator.sangria.core;
 
 import java.util.*;
 
-import com.google.inject.Provider;
+import javax.inject.Provider;
+
 import com.google.inject.TypeLiteral;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;

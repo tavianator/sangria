@@ -19,7 +19,8 @@ package com.tavianator.sangria.core;
 
 import java.util.*;
 
-import com.google.inject.Provider;
+import javax.inject.Provider;
+
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Types;
 
@@ -77,11 +78,13 @@ public class TypeLiterals {
 
     @SuppressWarnings("unchecked")
     public static <T> TypeLiteral<Provider<T>> providerOf(Class<T> type) {
-        return (TypeLiteral<Provider<T>>)TypeLiteral.get(Types.providerOf(type));
+        // Can't use Types.providerOf() because we want to stick to JSR-330 Providers
+        return (TypeLiteral<Provider<T>>)TypeLiteral.get(Types.newParameterizedType(Provider.class, type));
     }
 
     @SuppressWarnings("unchecked")
     public static <T> TypeLiteral<Provider<T>> providerOf(TypeLiteral<T> type) {
-        return (TypeLiteral<Provider<T>>)TypeLiteral.get(Types.providerOf(type.getType()));
+        // Can't use Types.providerOf() because we want to stick to JSR-330 Providers
+        return (TypeLiteral<Provider<T>>)TypeLiteral.get(Types.newParameterizedType(Provider.class, type.getType()));
     }
 }
