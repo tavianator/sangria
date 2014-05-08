@@ -53,28 +53,28 @@ import com.tavianator.sangria.core.UniqueAnnotations;
  * </p>
  *
  * <pre>
- * ListBinder<String> listBinder = ListBinder.build(binder(), String.class)
+ * ListBinder&lt;String&gt; listBinder = ListBinder.build(binder(), String.class)
  *         .withDefaultPriority();
  * listBinder.addBinding().toInstance("a");
  * listBinder.addBinding().toInstance("b");
  * </pre>
  *
  * <p>
- * This will create a binding for a {@code List<String>}, which contains {@code "a"} followed by {@code "b"}. It also
- * creates a binding for {@code List<Provider<String>>} &mdash; this may be useful in more advanced cases to allow list
- * elements to be lazily loaded.
+ * This will create a binding for a {@code List&lt;String&gt;}, which contains {@code "a"} followed by {@code "b"}. It
+ * also creates a binding for {@code List&lt;Provider&lt;String&gt;&gt;} &mdash; this may be useful in more advanced
+ * cases to allow list elements to be lazily loaded.
  * </p>
  *
  * <p>To add an annotation to the list binding, simply write this:</p>
  *
  * <pre>
- * ListBinder<String> listBinder = ListBinder.build(binder(), String.class)
+ * ListBinder&lt;String&gt; listBinder = ListBinder.build(binder(), String.class)
  *         .annotatedWith(Names.named("name"))
  *         .withDefaultPriority();
  * </pre>
  *
  * <p>
- * and the created binding will be {@code @Named("name") List<String>} instead.
+ * and the created binding will be {@code @Named("name") List&lt;String&gt;} instead.
  * </p>
  *
  * <p>
@@ -84,13 +84,13 @@ import com.tavianator.sangria.core.UniqueAnnotations;
  *
  * <pre>
  * // In some module
- * ListBinder<String> listBinder1 = ListBinder.build(binder(), String.class)
+ * ListBinder&lt;String&gt; listBinder1 = ListBinder.build(binder(), String.class)
  *         .withPriority(0);
  * listBinder1.addBinding().toInstance("a");
  * listBinder1.addBinding().toInstance("b");
  *
  * // ... some other module
- * ListBinder<String> listBinder2 = ListBinder.build(binder(), String.class)
+ * ListBinder&lt;String&gt; listBinder2 = ListBinder.build(binder(), String.class)
  *         .withPriority(1);
  * listBinder2.addBinding().toInstance("c");
  * listBinder2.addBinding().toInstance("d");
@@ -266,7 +266,7 @@ public class ListBinder<T> {
     }
 
     /**
-     * Provider implementation for {@code List<Provider<T>>}.
+     * Provider implementation for {@code List&lt;Provider&lt;T&gt;&gt;}.
      */
     private static class ListOfProvidersProvider<T> implements Provider<List<Provider<T>>> {
         private final Key<Set<ListElement<T>>> setKey;
@@ -355,7 +355,7 @@ public class ListBinder<T> {
     }
 
     /**
-     * Provider implementation for {@code List<T>}, in terms of {@code List<Provider<T>>}.
+     * Provider implementation for {@code List&lt;T&gt;}, in terms of {@code List&lt;Provider&lt;T&gt;&gt;}.
      */
     private static class ListOfProvidersAdapter<T> implements Provider<List<T>> {
         private final Key<List<Provider<T>>> providerListKey;
