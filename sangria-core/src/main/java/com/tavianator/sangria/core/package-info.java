@@ -19,7 +19,7 @@
  * {@code sangria-core}: Common code for Sangria.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  */
 package com.tavianator.sangria.core;
