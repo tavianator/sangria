@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.*;
  * Tests for {@link DelayedError}.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.0
+ * @version 1.1
  * @since 1.0
  */
 public class DelayedErrorTest {
@@ -82,5 +82,32 @@ public class DelayedErrorTest {
                 DelayedError.create(binder(), cause);
             }
         });
+    }
+
+    @Test
+    public void testCancel() {
+        Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                DelayedError error = DelayedError.create(binder(), "Message");
+                error.cancel();
+            }
+        });
+    }
+
+    @Test
+    public void testLateCancel() {
+        final DelayedError[] errorHolder = new DelayedError[1];
+
+        Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                errorHolder[0] = DelayedError.create(binder(), "Message");
+                errorHolder[0].cancel();
+            }
+        });
+
+        thrown.expect(IllegalStateException.class);
+        errorHolder[0].cancel();
     }
 }

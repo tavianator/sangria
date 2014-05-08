@@ -25,6 +25,8 @@ import com.google.inject.CreationException;
 import com.google.inject.Injector;
 import com.google.inject.spi.Message;
 
+import static com.google.common.base.Preconditions.*;
+
 /**
  * Similar to {@link Binder#addError(String, Object...)}, but can be canceled later. Useful for enforcing correct usage
  * of fluent APIs.
@@ -35,6 +37,7 @@ import com.google.inject.spi.Message;
  */
 public class DelayedError {
     private Throwable error;
+    private boolean reported = false;
 
     /**
      * Create a {@link DelayedError}.
@@ -85,11 +88,13 @@ public class DelayedError {
      * Cancel this error.
      */
     public void cancel() {
-        this.error = null;
+        checkState(!reported, "This error has already been reported");
+        error = null;
     }
 
     @Inject
-    void inject(Injector injector) throws Throwable {
+    void reportErrors(Injector injector) throws Throwable {
+        reported = true;
         if (error != null) {
             throw error;
         }
