@@ -93,7 +93,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>16.0.1</version>
+                <version>17.0</version>
             </dependency>
 
             <dependency>
@@ -197,7 +197,7 @@
                 <configuration>
                     <links>
                         <link>https://google-guice.googlecode.com/git/latest-javadoc/</link>
-                        <link>http://docs.guava-libraries.googlecode.com/git-history/v16.0.1/javadoc/</link>
+                        <link>http://docs.guava-libraries.googlecode.com/git-history/v17.0/javadoc/</link>
                         <link>http://slf4j.org/api/</link>
                         <link>http://logging.apache.org/log4j/2.x/log4j-api/apidocs/</link>
                         <link>http://jsr-305.googlecode.com/svn/trunk/javadoc/</link>
@@ -255,7 +255,7 @@
                 <configuration>
                     <links>
                         <link>https://google-guice.googlecode.com/git/latest-javadoc/</link>
-                        <link>http://docs.guava-libraries.googlecode.com/git-history/v16.0.1/javadoc/</link>
+                        <link>http://docs.guava-libraries.googlecode.com/git-history/v17.0/javadoc/</link>
                         <link>http://slf4j.org/api/</link>
                         <link>http://logging.apache.org/log4j/2.x/log4j-api/apidocs/</link>
                         <link>http://jsr-305.googlecode.com/svn/trunk/javadoc/</link>
