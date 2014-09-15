@@ -79,6 +79,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.tavianator.sangria</groupId>
+                <artifactId>sangria-lazy</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>4.0-beta4</version>
@@ -288,6 +294,7 @@
         <module>sangria-slf4j</module>
         <module>sangria-log4j</module>
         <module>sangria-listbinder</module>
+        <module>sangria-lazy</module>
     </modules>
 
     <profiles>
