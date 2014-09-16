@@ -16,7 +16,7 @@
  ****************************************************************************/
 
 /**
- * Lazy loading.
+ * {@code sangria-lazy}: Lazy loading.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
  * @version 1.2
