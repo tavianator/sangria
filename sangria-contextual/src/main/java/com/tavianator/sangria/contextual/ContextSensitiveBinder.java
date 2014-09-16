@@ -21,7 +21,6 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import javax.inject.Inject;
 
-import com.google.common.base.Objects;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -236,7 +235,7 @@ public class ContextSensitiveBinder {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(providerKey);
+            return providerKey.hashCode();
         }
     }
 
@@ -296,7 +295,7 @@ public class ContextSensitiveBinder {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(instance);
+            return instance.hashCode();
         }
     }
 
@@ -358,7 +357,7 @@ public class ContextSensitiveBinder {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(key);
+            return key.hashCode();
         }
     }
 }
