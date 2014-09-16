@@ -76,7 +76,10 @@ public abstract class PotentialAnnotation {
     }
 
     /**
-     * @return A {@link PotentialAnnotation} with the annotation from a {@link Key}.
+     * Extract the annotation from a {@link Key}.
+     *
+     * @param key The {@link Key} whose annotation to use, if any.
+     * @return A {@link PotentialAnnotation} with the annotation from {@code key}.
      * @since 1.2
      */
     public static PotentialAnnotation from(Key<?> key) {
