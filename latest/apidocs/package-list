@@ -1,0 +1,6 @@
+com.tavianator.sangria.contextual
+com.tavianator.sangria.core
+com.tavianator.sangria.lazy
+com.tavianator.sangria.listbinder
+com.tavianator.sangria.log4j
+com.tavianator.sangria.slf4j
