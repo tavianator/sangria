@@ -23,7 +23,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ListMultimap;
@@ -396,7 +395,7 @@ public class ListBinder<T> {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(providerListKey);
+            return providerListKey.hashCode();
         }
     }
 
