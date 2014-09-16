@@ -13,7 +13,7 @@
     <artifactId>sangria-lazy</artifactId>
     <packaging>jar</packaging>
     <name>Sangria Lazy</name>
-    <description>Lazily-loaded dependencies</description>
+    <description>Lazy loading</description>
 
     <dependencies>
         <dependency>
