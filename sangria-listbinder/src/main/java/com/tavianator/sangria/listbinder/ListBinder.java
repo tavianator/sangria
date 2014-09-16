@@ -60,9 +60,9 @@ import com.tavianator.sangria.core.UniqueAnnotations;
  * </pre>
  *
  * <p>
- * This will create a binding for a {@code List&lt;String&gt;}, which contains {@code "a"} followed by {@code "b"}. It
- * also creates a binding for {@code List&lt;Provider&lt;String&gt;&gt;} &mdash; this may be useful in more advanced
- * cases to allow list elements to be lazily loaded.
+ * This will create a binding for a {@code List<String>}, which contains {@code "a"} followed by {@code "b"}. It also
+ * creates a binding for {@code List<Provider<String>>} &mdash; this may be useful in more advanced cases to allow list
+ * elements to be lazily loaded.
  * </p>
  *
  * <p>To add an annotation to the list binding, simply write this:</p>
@@ -74,7 +74,7 @@ import com.tavianator.sangria.core.UniqueAnnotations;
  * </pre>
  *
  * <p>
- * and the created binding will be {@code @Named("name") List&lt;String&gt;} instead.
+ * and the created binding will be {@code @Named("name") List<String>} instead.
  * </p>
  *
  * <p>
