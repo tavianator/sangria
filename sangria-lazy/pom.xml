@@ -10,10 +10,10 @@
         <version>1.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sangria-listbinder</artifactId>
+    <artifactId>sangria-lazy</artifactId>
     <packaging>jar</packaging>
-    <name>Sangria ListBinder</name>
-    <description>A multi-binder with ordering guarantees</description>
+    <name>Sangria Lazy</name>
+    <description>Lazy loading</description>
 
     <dependencies>
         <dependency>
@@ -24,11 +24,6 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
         </dependency>
 
         <dependency>

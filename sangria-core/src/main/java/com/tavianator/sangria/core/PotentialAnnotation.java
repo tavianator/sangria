@@ -29,7 +29,7 @@ import com.google.inject.spi.Message;
  * A record of stored annotations, perfect for builders with {@code annotatedWith()} methods.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.1
+ * @version 1.2
  * @since 1.1
  */
 public abstract class PotentialAnnotation {
@@ -73,6 +73,24 @@ public abstract class PotentialAnnotation {
      */
     public static PotentialAnnotation none() {
         return NONE;
+    }
+
+    /**
+     * @return A {@link PotentialAnnotation} with the annotation from a {@link Key}.
+     * @since 1.2
+     */
+    public static PotentialAnnotation from(Key<?> key) {
+        Annotation instance = key.getAnnotation();
+        if (instance != null) {
+            return none().annotatedWith(instance);
+        }
+
+        Class<? extends Annotation> type = key.getAnnotationType();
+        if (type != null) {
+            return none().annotatedWith(type);
+        }
+
+        return none();
     }
 
     private PotentialAnnotation() {
@@ -140,6 +158,12 @@ public abstract class PotentialAnnotation {
     public abstract <T> T accept(Visitor<T> visitor);
 
     @Override
+    public abstract boolean equals(Object o);
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
     public abstract String toString();
 
     /**
@@ -169,6 +193,16 @@ public abstract class PotentialAnnotation {
         @Override
         public <T> T accept(Visitor<T> visitor) {
             return visitor.visitNoAnnotation();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o == this || o instanceof NoAnnotation;
+        }
+
+        @Override
+        public int hashCode() {
+            return NoAnnotation.class.hashCode();
         }
 
         @Override
@@ -203,6 +237,23 @@ public abstract class PotentialAnnotation {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (!(o instanceof AnnotationType)) {
+                return false;
+            }
+
+            AnnotationType other = (AnnotationType)o;
+            return annotationType.equals(other.annotationType);
+        }
+
+        @Override
+        public int hashCode() {
+            return annotationType.hashCode();
+        }
+
+        @Override
         public String toString() {
             return "@" + annotationType.getCanonicalName();
         }
@@ -231,6 +282,23 @@ public abstract class PotentialAnnotation {
         @Override
         public <T> T accept(Visitor<T> visitor) {
             return visitor.visitAnnotationInstance(annotation);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (!(o instanceof AnnotationInstance)) {
+                return false;
+            }
+
+            AnnotationInstance other = (AnnotationInstance)o;
+            return annotation.equals(other.annotation);
+        }
+
+        @Override
+        public int hashCode() {
+            return annotation.hashCode();
         }
 
         @Override

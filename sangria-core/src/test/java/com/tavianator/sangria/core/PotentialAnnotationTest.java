@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  * Tests for {@link PotentialAnnotation}s.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.1
+ * @version 1.2
  * @since 1.1
  */
 public class PotentialAnnotationTest {
@@ -63,8 +63,8 @@ public class PotentialAnnotationTest {
 
     @Test(expected = CreationException.class)
     public void testInvalidAnnotatedWithInstance() {
-        none.annotatedWith(Names.named("name"))
-                .annotatedWith(Names.named("name"));
+        none.annotatedWith(nameAnnotation)
+                .annotatedWith(nameAnnotation);
     }
 
     @Test
@@ -75,6 +75,16 @@ public class PotentialAnnotationTest {
                 equalTo(new Key<String>(Simple.class) { }));
         assertThat(none.annotatedWith(nameAnnotation).getKey(String.class),
                 equalTo(new Key<String>(nameAnnotation) { }));
+    }
+
+    @Test
+    public void testFromKey() {
+        assertThat(PotentialAnnotation.from(new Key<String>() { }),
+                equalTo(none));
+        assertThat(PotentialAnnotation.from(new Key<String>(Simple.class) { }),
+                equalTo(none.annotatedWith(Simple.class)));
+        assertThat(PotentialAnnotation.from(new Key<String>(nameAnnotation) { }),
+                equalTo(none.annotatedWith(nameAnnotation)));
     }
 
     @Test
@@ -114,7 +124,7 @@ public class PotentialAnnotationTest {
     }
 
     /**
-     * Needed to avoid compilation error to to inferred type being anonymous class.
+     * Needed to avoid compilation error due to inferred type being anonymous class.
      */
     private static <T> Matcher<Key<T>> equalTo(Key<T> key) {
         return Matchers.equalTo(key);
