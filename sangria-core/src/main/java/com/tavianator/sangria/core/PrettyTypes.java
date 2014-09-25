@@ -67,14 +67,10 @@ public class PrettyTypes {
 
     private static String format(Key<?> key) {
         StringBuilder builder = new StringBuilder(key.getTypeLiteral().toString());
-        if (key.getAnnotationType() != null) {
-            builder.append(" annotated with ");
-            if (key.getAnnotation() != null) {
-                builder.append(key.getAnnotation());
-            } else {
-                builder.append("@")
-                        .append(format(key.getAnnotationType()));
-            }
+        PotentialAnnotation annotation = PotentialAnnotation.from(key);
+        if (annotation.hasAnnotation()) {
+            builder.append(" annotated with ")
+                    .append(annotation);
         }
         return builder.toString();
     }
