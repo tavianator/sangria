@@ -19,6 +19,7 @@ package com.tavianator.sangria.log4j;
 
 import javax.inject.Singleton;
 
+import com.google.inject.Inject;
 import com.google.inject.spi.InjectionPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,10 @@ import com.tavianator.sangria.contextual.ContextSensitiveProvider;
  */
 @Singleton
 class Log4jLoggerProvider implements ContextSensitiveProvider<Logger> {
+    @Inject
+    Log4jLoggerProvider() {
+    }
+
     @Override
     public Logger getInContext(InjectionPoint injectionPoint) {
         return LogManager.getLogger(injectionPoint.getDeclaringType().getRawType());
