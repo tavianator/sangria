@@ -28,6 +28,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
+import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 import com.google.inject.TypeLiteral;
@@ -40,6 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static com.tavianator.sangria.test.SangriaMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -54,6 +56,10 @@ public class ContextSensitiveBinderTest {
     public @Rule ExpectedException thrown = ExpectedException.none();
 
     private static class SelfProvider implements ContextSensitiveProvider<String> {
+        @Inject
+        SelfProvider() {
+        }
+
         // For testing getInjectionPoints() in the SPI below
         @SuppressWarnings("unused")
         @Inject Injector injector;
@@ -189,6 +195,21 @@ public class ContextSensitiveBinderTest {
         HasSelf hasSelf = injector.getInstance(HasSelf.class);
         assertThat(hasSelf.self, equalTo("HasSelf"));
         assertThat(hasSelf.selfProvider.get(), equalTo("<unknown>"));
+    }
+
+    @Test
+    public void testBestPractices() {
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                ContextSensitiveBinder.create(binder())
+                        .bind(String.class)
+                        .annotatedWith(Names.named("self"))
+                        .toContextSensitiveProvider(SelfProvider.class);
+            }
+        };
+        assertThat(module, is(atomic()));
+        assertThat(module, followsBestPractices());
     }
 
     private static class RequiredContextProvider implements ContextSensitiveProvider<String> {
