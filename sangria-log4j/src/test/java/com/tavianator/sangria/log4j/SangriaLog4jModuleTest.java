@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.tavianator.sangria.test.SangriaMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -74,7 +75,8 @@ public class SangriaLog4jModuleTest {
     }
 
     @Test
-    public void testDeDuplication() {
-        Guice.createInjector(new SangriaLog4jModule(), new SangriaLog4jModule());
+    public void testBestPractices() {
+        assertThat(new SangriaLog4jModule(), is(atomic()));
+        assertThat(new SangriaLog4jModule(), followsBestPractices());
     }
 }

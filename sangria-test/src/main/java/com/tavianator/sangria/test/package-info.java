@@ -15,37 +15,11 @@
  * limitations under the License.                                           *
  ****************************************************************************/
 
-package com.tavianator.sangria.log4j;
-
-import javax.inject.Singleton;
-
-import com.google.inject.Inject;
-import com.google.inject.spi.InjectionPoint;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.tavianator.sangria.contextual.ContextSensitiveProvider;
-
 /**
- * Actual {@link Logger} provider implementation.
+ * {@code sangria-test}: Utilities for testing with Guice.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.0
- * @since 1.0
+ * @version 1.2
+ * @since 1.2
  */
-@Singleton
-class Log4jLoggerProvider implements ContextSensitiveProvider<Logger> {
-    @Inject
-    Log4jLoggerProvider() {
-    }
-
-    @Override
-    public Logger getInContext(InjectionPoint injectionPoint) {
-        return LogManager.getLogger(injectionPoint.getDeclaringType().getRawType());
-    }
-
-    @Override
-    public Logger getInUnknownContext() {
-        return LogManager.getRootLogger();
-    }
-}
+package com.tavianator.sangria.test;

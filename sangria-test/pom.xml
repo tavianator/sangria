@@ -10,26 +10,20 @@
         <version>1.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sangria-log4j</artifactId>
+    <artifactId>sangria-test</artifactId>
     <packaging>jar</packaging>
-    <name>Sangria Log4j</name>
-    <description>Log4j Logger injection</description>
+    <name>Sangria Test</name>
+    <description>Utilities for testing with Guice</description>
 
     <dependencies>
-        <dependency>
-            <groupId>com.tavianator.sangria</groupId>
-            <artifactId>sangria-contextual</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.0.2</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
 
         <dependency>
@@ -39,33 +33,18 @@
         </dependency>
 
         <dependency>
-            <groupId>com.tavianator.sangria</groupId>
-            <artifactId>sangria-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-integration</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

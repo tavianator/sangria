@@ -40,6 +40,7 @@ import com.google.inject.spi.ProviderWithExtensionVisitor;
 import com.google.inject.spi.ProvisionListener;
 
 import com.tavianator.sangria.core.DelayedError;
+import com.tavianator.sangria.core.UniqueAnnotations;
 
 /**
  * A binder for {@link ContextSensitiveProvider}s.
@@ -139,8 +140,15 @@ public class ContextSensitiveBinder {
         public void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<? extends T>> key) {
             error.cancel();
 
-            binder.bind(bindingKey).toProvider(new ProviderKeyAdapter<>(key));
+            binder.bind(bindingKey).toProvider(new ProviderKeyAdapter<>(key, makeLinkedKey(key)));
             binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
+        }
+
+        private <U> Key<U> makeLinkedKey(Key<U> key) {
+            Key<U> linkedKey = Key.get(key.getTypeLiteral(), UniqueAnnotations.create());
+            binder.bind(linkedKey)
+                    .to(key);
+            return linkedKey;
         }
 
         @Override
@@ -190,15 +198,19 @@ public class ContextSensitiveBinder {
 
     private static class ProviderKeyAdapter<T> extends ProviderAdapter<T> implements ContextSensitiveProviderKeyBinding<T> {
         private final Key<? extends ContextSensitiveProvider<? extends T>> providerKey;
+        private final Key<? extends ContextSensitiveProvider<? extends T>> linkedKey;
         private Provider<? extends ContextSensitiveProvider<? extends T>> provider;
 
-        ProviderKeyAdapter(Key<? extends ContextSensitiveProvider<? extends T>> providerKey) {
+        ProviderKeyAdapter(
+                Key<? extends ContextSensitiveProvider<? extends T>> providerKey,
+                Key<? extends ContextSensitiveProvider<? extends T>> linkedKey) {
             this.providerKey = providerKey;
+            this.linkedKey = linkedKey;
         }
 
         @Inject
         void inject(Injector injector) {
-            provider = injector.getProvider(providerKey);
+            provider = injector.getProvider(linkedKey);
         }
 
         @Override
