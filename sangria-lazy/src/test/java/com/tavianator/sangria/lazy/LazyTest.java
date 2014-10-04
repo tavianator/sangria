@@ -35,6 +35,7 @@ import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
 import org.junit.Test;
 
+import static com.tavianator.sangria.test.SangriaMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -69,7 +70,12 @@ public class LazyTest {
     }
 
     private static class HasConcrete {
-        @Inject Lazy<Concrete> lazy;
+        final Lazy<Concrete> lazy;
+
+        @Inject
+        HasConcrete(Lazy<Concrete> lazy) {
+            this.lazy = lazy;
+        }
     }
 
     private static class HasQualifiedAbstract {
@@ -88,6 +94,8 @@ public class LazyTest {
             protected void configure() {
                 binder().requireExplicitBindings();
 
+                bind(HasConcrete.class);
+
                 bind(Concrete.class);
                 LazyBinder.create(binder())
                         .bind(Concrete.class);
@@ -95,11 +103,26 @@ public class LazyTest {
         }));
     }
 
+    @Test
+    public void testBestPractices() {
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(HasConcrete.class);
+
+                bind(Concrete.class);
+                LazyBinder.create(binder())
+                        .bind(Concrete.class);
+            }
+        };
+        assertThat(module, is(atomic()));
+        assertThat(module, followsBestPractices());
+    }
+
     private void testHasConcrete(Injector injector) {
         int before = Concrete.INSTANCES.get();
 
-        HasConcrete hasConcrete = new HasConcrete();
-        injector.injectMembers(hasConcrete);
+        HasConcrete hasConcrete = injector.getInstance(HasConcrete.class);
         assertThat(Concrete.INSTANCES.get(), equalTo(before));
 
         Concrete instance = hasConcrete.lazy.get();
@@ -109,8 +132,7 @@ public class LazyTest {
         assertThat(instance2, sameInstance(instance));
         assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
 
-        HasConcrete hasConcrete2 = new HasConcrete();
-        injector.injectMembers(hasConcrete2);
+        HasConcrete hasConcrete2 = injector.getInstance(HasConcrete.class);
         assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
 
         Concrete instance3 = hasConcrete2.lazy.get();
@@ -150,8 +172,7 @@ public class LazyTest {
     private void testQualifiedAbstract(Injector injector) {
         int before = Concrete.INSTANCES.get();
 
-        HasQualifiedAbstract hasQualifiedAbstract = new HasQualifiedAbstract();
-        injector.injectMembers(hasQualifiedAbstract);
+        HasQualifiedAbstract hasQualifiedAbstract = injector.getInstance(HasQualifiedAbstract.class);
         assertThat(Concrete.INSTANCES.get(), equalTo(before));
 
         Abstract instance = hasQualifiedAbstract.lazy.get();
@@ -161,8 +182,7 @@ public class LazyTest {
         assertThat(instance2, sameInstance(instance2));
         assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
 
-        HasQualifiedAbstract hasQualifiedAbstract2 = new HasQualifiedAbstract();
-        injector.injectMembers(hasQualifiedAbstract2);
+        HasQualifiedAbstract hasQualifiedAbstract2 = injector.getInstance(HasQualifiedAbstract.class);
         assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
 
         Abstract instance3 = hasQualifiedAbstract2.lazy.get();

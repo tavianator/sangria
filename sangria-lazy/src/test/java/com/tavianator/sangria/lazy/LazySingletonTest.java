@@ -20,12 +20,14 @@ package com.tavianator.sangria.lazy;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 import org.junit.Test;
 
+import static com.tavianator.sangria.test.SangriaMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -62,11 +64,6 @@ public class LazySingletonTest {
         test(Stage.PRODUCTION, new SangriaLazyModule());
     }
 
-    @Test
-    public void testDuplicateModule() {
-        test(Stage.PRODUCTION, new SangriaLazyModule(), new SangriaLazyModule());
-    }
-
     private void test(Stage stage, Module... modules) {
         int before = Scoped.INSTANCES.get();
 
@@ -79,5 +76,19 @@ public class LazySingletonTest {
 
         assertThat(provider.get(), sameInstance(instance));
         assertThat(Scoped.INSTANCES.get(), equalTo(before + 1));
+    }
+
+    @Test
+    public void testBestPractices() {
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                install(new SangriaLazyModule());
+                bind(Scoped.class);
+            }
+        };
+
+        assertThat(module, is(atomic()));
+        assertThat(module, followsBestPractices());
     }
 }

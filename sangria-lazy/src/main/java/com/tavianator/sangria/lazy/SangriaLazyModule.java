@@ -31,14 +31,4 @@ public class SangriaLazyModule extends AbstractModule {
     protected void configure() {
         bindScope(LazySingleton.class, LazyScopes.LAZY_SINGLETON);
     }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof SangriaLazyModule;
-    }
-
-    @Override
-    public int hashCode() {
-        return SangriaLazyModule.class.hashCode();
-    }
 }
