@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import static com.tavianator.sangria.test.SangriaMatchers.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -75,7 +76,8 @@ public class SangriaSlf4jModuleTest {
     }
 
     @Test
-    public void testDeDuplication() {
-        Guice.createInjector(new SangriaSlf4jModule(), new SangriaSlf4jModule());
+    public void testBestPractices() {
+        assertThat(new SangriaSlf4jModule(), is(atomic()));
+        assertThat(new SangriaSlf4jModule(), followsBestPractices());
     }
 }
