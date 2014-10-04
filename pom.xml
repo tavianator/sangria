@@ -56,6 +56,12 @@
 
             <dependency>
                 <groupId>com.tavianator.sangria</groupId>
+                <artifactId>sangria-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.tavianator.sangria</groupId>
                 <artifactId>sangria-contextual</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -290,6 +296,7 @@
 
     <modules>
         <module>sangria-core</module>
+        <module>sangria-test</module>
         <module>sangria-contextual</module>
         <module>sangria-slf4j</module>
         <module>sangria-log4j</module>
