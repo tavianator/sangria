@@ -25,7 +25,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.ConfigurationException;
-import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
@@ -140,11 +139,15 @@ public class ContextSensitiveBinder {
         public void toContextSensitiveProvider(Key<? extends ContextSensitiveProvider<? extends T>> key) {
             error.cancel();
 
-            binder.bind(bindingKey).toProvider(new ProviderKeyAdapter<>(key, makeLinkedKey(key)));
+            Provider<? extends ContextSensitiveProvider<? extends T>> provider = binder.getProvider(makeUniqueLinkedKey(key));
+            binder.bind(bindingKey).toProvider(new ProviderKeyAdapter<>(provider, key));
             binder.bindListener(new BindingMatcher(bindingKey), new Trigger(bindingKey));
         }
 
-        private <U> Key<U> makeLinkedKey(Key<U> key) {
+        /**
+         * For Binder#requireExplicitBindings() support.
+         */
+        private <U> Key<U> makeUniqueLinkedKey(Key<U> key) {
             Key<U> linkedKey = Key.get(key.getTypeLiteral(), UniqueAnnotations.create());
             binder.bind(linkedKey)
                     .to(key);
@@ -197,20 +200,14 @@ public class ContextSensitiveBinder {
     }
 
     private static class ProviderKeyAdapter<T> extends ProviderAdapter<T> implements ContextSensitiveProviderKeyBinding<T> {
+        private final Provider<? extends ContextSensitiveProvider<? extends T>> provider;
         private final Key<? extends ContextSensitiveProvider<? extends T>> providerKey;
-        private final Key<? extends ContextSensitiveProvider<? extends T>> linkedKey;
-        private Provider<? extends ContextSensitiveProvider<? extends T>> provider;
 
         ProviderKeyAdapter(
-                Key<? extends ContextSensitiveProvider<? extends T>> providerKey,
-                Key<? extends ContextSensitiveProvider<? extends T>> linkedKey) {
+                Provider<? extends ContextSensitiveProvider<? extends T>> provider,
+                Key<? extends ContextSensitiveProvider<? extends T>> providerKey) {
+            this.provider = provider;
             this.providerKey = providerKey;
-            this.linkedKey = linkedKey;
-        }
-
-        @Inject
-        void inject(Injector injector) {
-            provider = injector.getProvider(linkedKey);
         }
 
         @Override
