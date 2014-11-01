@@ -39,7 +39,7 @@
     </scm>
 
     <prerequisites>
-        <maven>3.0</maven>
+        <maven>3.0.4</maven>
     </prerequisites>
 
     <properties>
@@ -172,6 +172,12 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.5</version>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.5</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -256,6 +262,17 @@
                     <useReleaseProfile>false</useReleaseProfile>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -306,13 +323,7 @@
 
     <profiles>
         <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
