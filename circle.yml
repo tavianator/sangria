@@ -1,0 +1,3 @@
+dependencies:
+  override:
+    - mvn dependency:resolve -fn
