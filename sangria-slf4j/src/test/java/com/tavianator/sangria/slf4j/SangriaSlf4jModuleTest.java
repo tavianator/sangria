@@ -58,21 +58,23 @@ public class SangriaSlf4jModuleTest {
         assertThat(provider.get().getName(), equalTo(Logger.ROOT_LOGGER_NAME));
     }
 
+    static class HasProviderMethod extends AbstractModule {
+        @Override
+        protected void configure() {
+            install(new SangriaSlf4jModule());
+        }
+
+        @Provides
+        String getLoggerName(Logger logger) {
+            return logger.getName();
+        }
+    }
+
     @Test
     public void testProviderMethod() {
-        Injector injector = Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                install(new SangriaSlf4jModule());
-            }
+        Injector injector = Guice.createInjector(new HasProviderMethod());
 
-            @Provides
-            String getLoggerName(Logger logger) {
-                return logger.getName();
-            }
-        });
-
-        assertThat(injector.getInstance(String.class), equalTo(Logger.ROOT_LOGGER_NAME));
+        assertThat(injector.getInstance(String.class), equalTo(HasProviderMethod.class.getName()));
     }
 
     @Test
