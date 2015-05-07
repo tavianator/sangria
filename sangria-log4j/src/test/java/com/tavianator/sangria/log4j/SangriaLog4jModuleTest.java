@@ -34,6 +34,8 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 /**
+ * Tests for {@link SangriaLog4jModule}.
+ *
  * @author Tavian Barnes (tavianator@tavianator.com)
  * @version 1.0
  * @since 1.0
