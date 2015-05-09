@@ -125,7 +125,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>1.10.8</version>
+                <version>1.10.19</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -259,7 +259,7 @@
                         <link>http://jsr-305.googlecode.com/svn/trunk/javadoc/</link>
                         <link>http://junit.org/javadoc/latest/</link>
                         <link>http://hamcrest.org/JavaHamcrest/javadoc/1.3/</link>
-                        <link>http://mockito.github.io/mockito/docs/1.10.8/</link>
+                        <link>http://mockito.github.io/mockito/docs/1.10.19/</link>
                     </links>
                 </configuration>
                 <executions>
@@ -328,7 +328,7 @@
                         <link>http://jsr-305.googlecode.com/svn/trunk/javadoc/</link>
                         <link>http://junit.org/javadoc/latest/</link>
                         <link>http://hamcrest.org/JavaHamcrest/javadoc/1.3/</link>
-                        <link>http://mockito.github.io/mockito/docs/1.10.8/</link>
+                        <link>http://mockito.github.io/mockito/docs/1.10.19/</link>
                     </links>
                 </configuration>
                 <reportSets>
