@@ -269,5 +269,22 @@ public class LazyBinder {
                 return visitor.visit(binding);
             }
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            } else if (!(obj instanceof LazyProvider)) {
+                return false;
+            }
+
+            LazyProvider<?> other = (LazyProvider<?>) obj;
+            return key.equals(other.key);
+        }
+
+        @Override
+        public int hashCode() {
+            return key.hashCode();
+        }
     }
 }

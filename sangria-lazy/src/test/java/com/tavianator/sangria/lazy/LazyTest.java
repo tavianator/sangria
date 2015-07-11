@@ -22,6 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
+import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
@@ -30,9 +31,12 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.ProvidedBy;
+import com.google.inject.Provider;
 import com.google.inject.spi.DefaultBindingTargetVisitor;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
+import com.google.inject.util.Providers;
 import org.junit.Test;
 
 import static com.tavianator.sangria.test.SangriaMatchers.*;
@@ -43,7 +47,7 @@ import static org.junit.Assert.*;
  * Tests for {@link Lazy} injection.
  *
  * @author Tavian Barnes (tavianator@tavianator.com)
- * @version 1.2
+ * @version 1.3
  * @since 1.2
  */
 public class LazyTest {
@@ -52,55 +56,131 @@ public class LazyTest {
     private @interface Simple {
     }
 
+    @ProvidedBy(CountingProvider.class)
     private interface Abstract {
     }
 
-    private static class Concrete implements Abstract {
-        static final ThreadLocal<Integer> INSTANCES = new ThreadLocal<Integer>() {
-            @Override
-            protected Integer initialValue() {
-                return 0;
-            }
-        };
+    @Singleton
+    private static class CountingProvider implements Provider<Abstract> {
+        int count = 0;
+        private final Provider<Abstract> impl;
 
         @Inject
-        Concrete() {
-            INSTANCES.set(INSTANCES.get() + 1);
+        CountingProvider() {
+            this.impl = new Provider<Abstract>() {
+                @Override
+                public Abstract get() {
+                    return new Abstract() { };
+                }
+            };
+        }
+
+        CountingProvider(Abstract instance) {
+            this.impl = Providers.of(instance);
+        }
+
+        @Override
+        public Abstract get() {
+            ++count;
+            return impl.get();
         }
     }
 
-    private static class HasConcrete {
-        final Lazy<Concrete> lazy;
+    private static class HasLazy {
+        final Lazy<Abstract> lazy;
 
         @Inject
-        HasConcrete(Lazy<Concrete> lazy) {
+        HasLazy(Lazy<Abstract> lazy) {
             this.lazy = lazy;
         }
     }
 
-    private static class HasQualifiedAbstract {
-        @Inject @Simple Lazy<Abstract> lazy;
+    private static class HasSimpleLazy extends HasLazy {
+        @Inject
+        HasSimpleLazy(@Simple Lazy<Abstract> lazy) {
+            super(lazy);
+        }
+    }
+
+    private void test(Injector injector, Class<? extends HasLazy> type) {
+        CountingProvider provider = injector.getInstance(CountingProvider.class);
+        HasLazy hasLazy = injector.getInstance(type);
+        assertThat(provider.count, equalTo(0));
+
+        Abstract a = hasLazy.lazy.get();
+        assertThat(provider.count, equalTo(1));
+
+        assertThat(hasLazy.lazy.get(), sameInstance(a));
+        assertThat(provider.count, equalTo(1));
+
+        hasLazy = injector.getInstance(type);
+        assertThat(provider.count, equalTo(1));
+
+        a = hasLazy.lazy.get();
+        assertThat(provider.count, equalTo(2));
+
+        assertThat(hasLazy.lazy.get(), sameInstance(a));
+        assertThat(provider.count, equalTo(2));
     }
 
     @Test
     public void testJustInTime() {
-        testHasConcrete(Guice.createInjector());
+        test(Guice.createInjector(), HasLazy.class);
     }
+
+    private static final Module EXPLICIT_MODULE = new AbstractModule() {
+        @Override
+        protected void configure() {
+            bind(Abstract.class)
+                    .toProvider(CountingProvider.class);
+
+            LazyBinder.create(binder())
+                    .bind(Abstract.class);
+
+            bind(HasLazy.class);
+        }
+    };
 
     @Test
     public void testExplicitBindings() {
-        testHasConcrete(Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                binder().requireExplicitBindings();
+        test(Guice.createInjector(EXPLICIT_MODULE), HasLazy.class);
+    }
 
-                bind(HasConcrete.class);
+    private static final Module BIND_SEPARATELY_MODULE = new AbstractModule() {
+        @Override
+        protected void configure() {
+            bind(Abstract.class)
+                    .annotatedWith(Simple.class)
+                    .toProvider(CountingProvider.class);
 
-                bind(Concrete.class);
-                LazyBinder.create(binder())
-                        .bind(Concrete.class);
-            }
-        }));
+            LazyBinder.create(binder())
+                    .bind(Abstract.class)
+                    .annotatedWith(Simple.class);
+
+            bind(HasSimpleLazy.class);
+        }
+    };
+
+    @Test
+    public void testBindSeparately() {
+        test(Guice.createInjector(BIND_SEPARATELY_MODULE), HasSimpleLazy.class);
+    }
+
+    private static final Module BIND_TOGETHER_MODULE = new AbstractModule() {
+        @Override
+        protected void configure() {
+            LazyBinder.create(binder())
+                    .bind(Abstract.class)
+                    .annotatedWith(Simple.class)
+                    .toProvider(CountingProvider.class);
+
+            bind(HasSimpleLazy.class);
+        }
+    };
+
+    @Test
+    public void testBindTogether() {
+        test(Guice.createInjector(BIND_TOGETHER_MODULE), HasSimpleLazy.class);
     }
 
     @Test
@@ -108,101 +188,31 @@ public class LazyTest {
         Module module = new AbstractModule() {
             @Override
             protected void configure() {
-                bind(HasConcrete.class);
-
-                bind(Concrete.class);
-                LazyBinder.create(binder())
-                        .bind(Concrete.class);
+                install(EXPLICIT_MODULE);
+                install(BIND_SEPARATELY_MODULE);
+                install(BIND_TOGETHER_MODULE);
             }
         };
+
         assertThat(module, is(atomic()));
         assertThat(module, followsBestPractices());
     }
 
-    private void testHasConcrete(Injector injector) {
-        int before = Concrete.INSTANCES.get();
-
-        HasConcrete hasConcrete = injector.getInstance(HasConcrete.class);
-        assertThat(Concrete.INSTANCES.get(), equalTo(before));
-
-        Concrete instance = hasConcrete.lazy.get();
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        Concrete instance2 = hasConcrete.lazy.get();
-        assertThat(instance2, sameInstance(instance));
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        HasConcrete hasConcrete2 = injector.getInstance(HasConcrete.class);
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        Concrete instance3 = hasConcrete2.lazy.get();
-        assertThat(instance3, not(sameInstance(instance)));
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 2));
-    }
-
     @Test
-    public void testBindSeparately() {
-        testQualifiedAbstract(Guice.createInjector(new AbstractModule() {
+    public void testNull() {
+        Module module = new AbstractModule() {
             @Override
             protected void configure() {
-                bind(Abstract.class)
-                        .annotatedWith(Simple.class)
-                        .to(Concrete.class);
-
-                LazyBinder.create(binder())
-                        .bind(Abstract.class)
-                        .annotatedWith(Simple.class);
+                bind(CountingProvider.class)
+                        .toInstance(new CountingProvider(null));
             }
-        }));
-    }
+        };
 
-    @Test
-    public void testBindTogether() {
-        testQualifiedAbstract(Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                LazyBinder.create(binder())
-                        .bind(Abstract.class)
-                        .annotatedWith(Simple.class)
-                        .to(Concrete.class);
-            }
-        }));
-    }
-
-    private void testQualifiedAbstract(Injector injector) {
-        int before = Concrete.INSTANCES.get();
-
-        HasQualifiedAbstract hasQualifiedAbstract = injector.getInstance(HasQualifiedAbstract.class);
-        assertThat(Concrete.INSTANCES.get(), equalTo(before));
-
-        Abstract instance = hasQualifiedAbstract.lazy.get();
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        Abstract instance2 = hasQualifiedAbstract.lazy.get();
-        assertThat(instance2, sameInstance(instance2));
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        HasQualifiedAbstract hasQualifiedAbstract2 = injector.getInstance(HasQualifiedAbstract.class);
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 1));
-
-        Abstract instance3 = hasQualifiedAbstract2.lazy.get();
-        assertThat(instance3, not(sameInstance(instance)));
-        assertThat(Concrete.INSTANCES.get(), equalTo(before + 2));
+        test(Guice.createInjector(module), HasLazy.class);
     }
 
     @Test(expected = CreationException.class)
     public void testMissingBinding() {
-        Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                LazyBinder.create(binder())
-                        .bind(Abstract.class);
-            }
-        });
-    }
-
-    @Test(expected = CreationException.class)
-    public void testMissingQualifiedBinding() {
         Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
@@ -239,7 +249,7 @@ public class LazyTest {
                 LazyBinder.create(binder())
                         .bind(Abstract.class)
                         .annotatedWith(Simple.class)
-                        .to(Concrete.class);
+                        .toProvider(CountingProvider.class);
             }
         };
 
@@ -258,6 +268,5 @@ public class LazyTest {
         Injector injector = Guice.createInjector(Elements.getModule(elements));
         assertThat(visit(injector.getBinding(new Key<Lazy<Abstract>>(Simple.class) { })), is(true));
         assertThat(visit(injector.getBinding(new Key<Abstract>(Simple.class) { })), is(false));
-        assertThat(visit(injector.getBinding(new Key<Concrete>() { })), is(false));
     }
 }
