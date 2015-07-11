@@ -36,6 +36,7 @@ import com.google.inject.Provider;
 import com.google.inject.spi.DefaultBindingTargetVisitor;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
+import com.google.inject.util.Providers;
 import org.junit.Test;
 
 import static com.tavianator.sangria.test.SangriaMatchers.*;
@@ -62,15 +63,26 @@ public class LazyTest {
     @Singleton
     private static class CountingProvider implements Provider<Abstract> {
         int count = 0;
+        private final Provider<Abstract> impl;
 
         @Inject
         CountingProvider() {
+            this.impl = new Provider<Abstract>() {
+                @Override
+                public Abstract get() {
+                    return new Abstract() { };
+                }
+            };
+        }
+
+        CountingProvider(Abstract instance) {
+            this.impl = Providers.of(instance);
         }
 
         @Override
         public Abstract get() {
             ++count;
-            return new Abstract() { };
+            return impl.get();
         }
     }
 
@@ -184,6 +196,19 @@ public class LazyTest {
 
         assertThat(module, is(atomic()));
         assertThat(module, followsBestPractices());
+    }
+
+    @Test
+    public void testNull() {
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(CountingProvider.class)
+                        .toInstance(new CountingProvider(null));
+            }
+        };
+
+        test(Guice.createInjector(module), HasLazy.class);
     }
 
     @Test(expected = CreationException.class)

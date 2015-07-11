@@ -56,8 +56,10 @@ import javax.inject.Provider;
  * @since 1.2
  */
 public final class Lazy<T> {
+    private static final Object SENTINEL = new Object();
+
     private final Provider<T> provider;
-    private volatile T instance = null;
+    private volatile Object instance = SENTINEL;
 
     @Inject
     Lazy(Provider<T> provider) {
@@ -67,15 +69,16 @@ public final class Lazy<T> {
     /**
      * @return A lazily-produced value of type {@code T}.
      */
+    @SuppressWarnings("unchecked")
     public T get() {
         // Double-checked locking
-        if (instance == null) {
+        if (instance == SENTINEL) {
             synchronized (this) {
-                if (instance == null) {
+                if (instance == SENTINEL) {
                     instance = provider.get();
                 }
             }
         }
-        return instance;
+        return (T) instance;
     }
 }
